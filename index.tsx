@@ -11,16 +11,13 @@ import {
 } from 'lucide-react';
 import AdminPortal from './components/AdminPortal';
 import BeatCard from './components/BeatCard';
-// Added missing import for CartModal
 import CartModal from './components/CartModal';
 import { Beat, CartItem } from './types';
 
 // --- Constants ---
 const SECRET_PASSWORD = 'BeatzbyMe';
-// Updated Stripe link as requested by the user
 const STRIPE_LINK = "https://buy.stripe.com/9B67sKbfkaWB3Sm4cSaIM00";
 const CONTACT_EMAIL = "jmendezbeatz1@gmail.com";
-const INITIAL_BEATS: Beat[] = [];
 
 // --- Sub-Components ---
 
@@ -66,31 +63,18 @@ const AboutSection = () => (
         </div>
       </div>
     </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32">
-       <div className="p-10 glass rounded-[2.5rem] border border-white/5 space-y-4">
-          <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-purple-500"><Music2 size={24} /></div>
-          <h4 className="font-black uppercase italic tracking-tight text-xl">Custom Production</h4>
-          <p className="text-sm text-gray-500 leading-relaxed">Exclusive bespoke production tailored to your vocal range and artistic vision.</p>
-       </div>
-       <div className="p-10 glass rounded-[2.5rem] border border-white/5 space-y-4">
-          <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-pink-500"><Waves size={24} /></div>
-          <h4 className="font-black uppercase italic tracking-tight text-xl">Mixing & Mastering</h4>
-          <p className="text-sm text-gray-500 leading-relaxed">Transform your rough demos into radio-ready singles with industry standard processing.</p>
-       </div>
-       <div className="p-10 glass rounded-[2.5rem] border border-white/5 space-y-4">
-          <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-blue-500"><ShieldCheck size={24} /></div>
-          <h4 className="font-black uppercase italic tracking-tight text-xl">Sound Design</h4>
-          <p className="text-sm text-gray-500 leading-relaxed">Unique texture creation and foley recording for filmmakers and game developers.</p>
-       </div>
-    </div>
   </div>
 );
 
 // --- Main App ---
 
 const App = () => {
-  const [beats, setBeats] = useState<Beat[]>(INITIAL_BEATS);
+  // Load beats from localStorage on mount to ensure persistence
+  const [beats, setBeats] = useState<Beat[]>(() => {
+    const saved = localStorage.getItem('jmendez_beats');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
   const [currentBeat, setCurrentBeat] = useState<Beat | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -114,6 +98,11 @@ const App = () => {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [progress, setProgress] = useState(0);
+
+  // Sync beats to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('jmendez_beats', JSON.stringify(beats));
+  }, [beats]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -147,7 +136,7 @@ const App = () => {
   };
 
   const deleteBeat = (id: string) => {
-    if (confirm("Permanently delete this beat from the marketplace?")) {
+    if (confirm("Permanently delete this beat?")) {
       setBeats(beats.filter(b => b.id !== id));
       if (currentBeat?.id === id) {
         setCurrentBeat(null);
@@ -163,14 +152,6 @@ const App = () => {
   const handleSendOffer = (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    
-    console.log("SENDING OFFER EMAIL TO PRODUCER...", {
-      to: CONTACT_EMAIL,
-      from: offerForm.email,
-      subject: `NEW OFFER: $${offerForm.amount} for "${offerBeat?.title}"`,
-      body: offerForm.message
-    });
-
     setTimeout(() => {
       setIsProcessing(false);
       setIsOfferSent(true);
@@ -180,8 +161,6 @@ const App = () => {
 
   const handleCheckout = () => {
     setIsProcessing(true);
-    // Stripe link is opened via CartModal. 
-    // handleCheckout is called to finalize the UI state after the simulated return from Stripe.
     setPurchasedItems([...cart]);
     setCart([]);
     setIsCartOpen(false);
@@ -190,12 +169,17 @@ const App = () => {
   };
 
   const downloadFile = (url: string, filename: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // If it's a dropbox link, open it in a new tab for download
+    if (url.includes('dropbox.com')) {
+      window.open(url.replace('raw=1', 'dl=1'), '_blank');
+    } else {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const marketplaceBeats = beats.filter(b => !b.isSold && b.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -222,7 +206,6 @@ const App = () => {
         </div>
       ) : (
         <>
-          {/* Top Brand Bar */}
           <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-10 py-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-xl flex items-center justify-center"><Music2 size={24} /></div>
@@ -248,7 +231,7 @@ const App = () => {
                   <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 leading-[0.9] italic uppercase">
                     Your Next Hit <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">Starts Here.</span>
                   </h1>
-                  <p className="text-gray-500 text-xs md:text-sm font-black uppercase tracking-[0.3em] max-w-2xl mb-12">
+                  <p className="text-gray-400 text-xs md:text-sm font-black uppercase tracking-[0.3em] max-w-2xl mb-12">
                     All beats are digital downloads, available instantly after purchase
                   </p>
                   <div className="flex flex-col md:flex-row items-center gap-6 max-w-4xl">
@@ -263,7 +246,7 @@ const App = () => {
                   <div className="text-center py-40 border border-white/5 rounded-3xl bg-white/5">
                     <Music2 size={64} className="mx-auto mb-6 text-gray-600" />
                     <h3 className="text-3xl font-black uppercase tracking-tighter italic">Crate Empty</h3>
-                    <p className="text-gray-500 mt-2">No available beats currently listed in the marketplace.</p>
+                    <p className="text-gray-500 mt-2">Upload your first hit in the Developer Portal.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-40">
@@ -285,112 +268,44 @@ const App = () => {
             )}
           </main>
 
-          {/* Fixed Bottom Dock - App Style */}
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-[95%] max-w-lg">
             <div className="glass rounded-[2.5rem] p-2 border border-white/10 flex items-center justify-around shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-              <button 
-                onClick={() => setActiveView('marketplace')}
-                className={`flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl transition-all ${activeView === 'marketplace' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
-              >
+              <button onClick={() => setActiveView('marketplace')} className={`flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl transition-all ${activeView === 'marketplace' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}>
                 <Music size={22} className={activeView === 'marketplace' ? 'fill-current' : ''} />
                 <span className="text-[10px] font-black uppercase tracking-widest">Market</span>
               </button>
-              
-              <button 
-                onClick={() => setActiveView('about')}
-                className={`flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl transition-all ${activeView === 'about' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
-              >
+              <button onClick={() => setActiveView('about')} className={`flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl transition-all ${activeView === 'about' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}>
                 <Info size={22} className={activeView === 'about' ? 'fill-current' : ''} />
                 <span className="text-[10px] font-black uppercase tracking-widest">About</span>
               </button>
-
-              <button 
-                onClick={() => setIsAuthModalOpen(true)}
-                className="flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl text-gray-500 hover:text-purple-400 transition-all"
-              >
+              <button onClick={() => setIsAuthModalOpen(true)} className="flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl text-gray-500 hover:text-purple-400 transition-all">
                 <LayoutDashboard size={22} />
                 <span className="text-[10px] font-black uppercase tracking-widest">Portal</span>
               </button>
-
-              <a 
-                href={`mailto:${CONTACT_EMAIL}`}
-                className="flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl text-gray-500 hover:text-pink-400 transition-all"
-              >
+              <a href={`mailto:${CONTACT_EMAIL}`} className="flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl text-gray-500 hover:text-pink-400 transition-all">
                 <Mail size={22} />
                 <span className="text-[10px] font-black uppercase tracking-widest">Contact</span>
               </a>
             </div>
           </div>
 
-          {/* Player Footer - Floating above Dock */}
           {currentBeat && (
             <div className="fixed bottom-28 left-0 right-0 z-50 px-6 pointer-events-none">
               <div className="max-w-4xl mx-auto glass rounded-[2rem] p-4 shadow-2xl border border-white/10 relative overflow-hidden pointer-events-auto">
-                <audio 
-                  ref={audioRef} 
-                  src={currentBeat.audioUrl} 
-                  onTimeUpdate={() => setProgress((audioRef.current?.currentTime || 0) / (audioRef.current?.duration || 1) * 100)} 
-                  onEnded={() => setIsPlaying(false)} 
-                  controlsList="nodownload" 
-                  onContextMenu={(e) => e.preventDefault()}
-                />
-                <div className="absolute top-0 left-0 right-0 h-1 bg-white/5"><div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-[0_0_20px_rgba(168,85,247,0.8)]" style={{ width: `${progress}%` }} /></div>
+                <audio ref={audioRef} src={currentBeat.audioUrl} onTimeUpdate={() => setProgress((audioRef.current?.currentTime || 0) / (audioRef.current?.duration || 1) * 100)} onEnded={() => setIsPlaying(false)} />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-white/5"><div className="h-full bg-gradient-to-r from-purple-500 to-pink-500" style={{ width: `${progress}%` }} /></div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 w-1/3">
                     <img src={currentBeat.coverArt} className="w-12 h-12 rounded-xl object-cover border border-white/10" />
                     <div className="hidden sm:block truncate"><h4 className="font-black text-sm truncate uppercase italic leading-none">{currentBeat.title}</h4></div>
                   </div>
                   <div className="flex items-center gap-8">
-                    <button onClick={() => setIsPlaying(!isPlaying)} className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 active:scale-90 transition-transform">
+                    <button onClick={() => setIsPlaying(!isPlaying)} className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center">
                       {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
                     </button>
                   </div>
-                  <div className="w-1/3 flex justify-end gap-4 text-gray-500">
-                    <Volume2 size={20} className="hidden sm:block" />
-                    <Lock size={20} />
-                  </div>
+                  <div className="w-1/3 flex justify-end gap-4 text-gray-500"><Lock size={20} /></div>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Portals and Modals (Offer, Auth, Admin, Cart) */}
-          {offerBeat && (
-            <div className="fixed inset-0 z-[130] flex items-center justify-center p-6 bg-black/95 backdrop-blur-3xl">
-              <div className="absolute inset-0" onClick={() => { setOfferBeat(null); setIsOfferSent(false); }} />
-              <div className="relative w-full max-w-xl glass rounded-[3rem] p-12 border border-purple-500/30 shadow-3xl">
-                {!isOfferSent ? (
-                  <>
-                    <div className="text-center mb-10">
-                      <div className="w-20 h-20 bg-purple-600/10 text-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-purple-500/20"><MessageSquareQuote size={40} /></div>
-                      <h2 className="text-3xl font-black uppercase italic tracking-tighter">PITCH YOUR OFFER</h2>
-                      <p className="text-gray-500 text-sm mt-3 font-bold uppercase tracking-[0.2em]">Exclusive for "{offerBeat.title}"</p>
-                    </div>
-                    <form onSubmit={handleSendOffer} className="space-y-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-[10px] font-black uppercase text-purple-500 tracking-[0.3em] mb-2 block">Offer ($)</label>
-                          <input required type="number" placeholder="500" className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-6 text-xl font-black focus:border-purple-500 outline-none" value={offerForm.amount} onChange={e => setOfferForm({...offerForm, amount: e.target.value})} />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.3em] mb-2 block">Email</label>
-                          <input required type="email" placeholder="artist@studio.com" className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-6 text-sm font-bold focus:border-white/30 outline-none" value={offerForm.email} onChange={e => setOfferForm({...offerForm, email: e.target.value})} />
-                        </div>
-                      </div>
-                      <textarea required rows={3} placeholder="Tell Jmendez about your project..." className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 outline-none focus:border-white/30 text-sm resize-none" value={offerForm.message} onChange={e => setOfferForm({...offerForm, message: e.target.value})} />
-                      <button type="submit" disabled={isProcessing} className="w-full bg-purple-600 text-white py-5 rounded-2xl font-black uppercase text-lg italic tracking-tighter hover:bg-purple-500 transition-all flex items-center justify-center gap-4">
-                        {isProcessing ? <Loader2 size={24} className="animate-spin" /> : <><Send size={20} /> DISPATCH OFFER</>}
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  <div className="text-center py-10">
-                    <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-green-500/20"><CheckCircle2 size={40} /></div>
-                    <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-4">OFFER DISPATCHED</h2>
-                    <p className="text-gray-400 text-sm mb-8 leading-relaxed">Jmendez will contact you at <span className="text-white font-black">{offerForm.email}</span> within 24 hours.</p>
-                    <button onClick={() => setOfferBeat(null)} className="px-10 py-4 bg-white text-black font-black uppercase italic tracking-tighter rounded-xl hover:scale-105 transition-all">Back to Market</button>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -402,36 +317,21 @@ const App = () => {
                 <form onSubmit={handleAuth} className="space-y-6">
                   <input autoFocus type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-white/5 border border-white/10 rounded-xl py-5 px-6 text-center text-xl tracking-[0.5em] focus:border-purple-500 outline-none transition-all placeholder:text-gray-800 font-black" />
                   <button type="submit" className="w-full bg-white text-black py-5 rounded-2xl font-black text-lg uppercase italic tracking-tighter hover:bg-purple-50 transition-all">Verify Identity</button>
-                  <button type="button" onClick={() => setIsAuthModalOpen(false)} className="w-full text-[10px] text-gray-700 uppercase tracking-[0.5em] font-black pt-4 hover:text-white transition-colors">Terminate Attempt</button>
                 </form>
               </div>
             </div>
           )}
 
           {isAdminPortalOpen && (
-            <AdminPortal 
-              isOpen={isAdminPortalOpen}
-              onClose={() => setIsAdminPortalOpen(false)}
-              onUpload={handleUpload}
-              beats={beats}
-              onDelete={deleteBeat}
-              onToggleSold={toggleSold}
-            />
+            <AdminPortal isOpen={isAdminPortalOpen} onClose={() => setIsAdminPortalOpen(false)} onUpload={handleUpload} beats={beats} onDelete={deleteBeat} onToggleSold={toggleSold} />
           )}
 
           {isCartOpen && (
-            <CartModal 
-              isOpen={isCartOpen}
-              onClose={() => setIsCartOpen(false)}
-              items={cart}
-              onRemove={(id) => setCart(cart.filter(item => item.beatId !== id))}
-              onCheckout={handleCheckout}
-            />
+            <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cart} onRemove={(id) => setCart(cart.filter(item => item.beatId !== id))} onCheckout={handleCheckout} />
           )}
         </>
       )}
 
-      {/* Global Styles */}
       <style>{`
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
         .animate-shake { animation: shake 0.15s ease-in-out 0s 2; }
