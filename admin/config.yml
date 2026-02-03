@@ -1,0 +1,32 @@
+
+backend:
+  name: git-gateway
+  branch: main # Ensure this matches your deployment branch
+
+media_folder: "public/images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "beats"
+    label: "Beat Inventory"
+    folder: "content"
+    extension: "json"
+    format: "json"
+    create: true
+    slug: "{{title}}"
+    fields:
+      - { label: "Beats List", name: "beats", widget: "list", fields: [
+          { label: "ID", name: "id", widget: "hidden", default: "beat_{{timestamp}}" },
+          { label: "Title", name: "title", widget: "string" },
+          { label: "Producer", name: "producer", widget: "string", default: "Jmendez Beatz" },
+          { label: "BPM", name: "bpm", widget: "number" },
+          { label: "Key", name: "key", widget: "string" },
+          { label: "Price (Lease)", name: "priceLease", widget: "number", value_type: "float" },
+          { label: "Price (Exclusive)", name: "priceExclusive", widget: "number", value_type: "float" },
+          { label: "Audio URL (Cloud)", name: "audioUrl", widget: "string" },
+          { label: "Cover Art URL", name: "coverArt", widget: "string" },
+          { label: "Description", name: "description", widget: "text" },
+          { label: "Tags", name: "tags", widget: "list" },
+          { label: "Is Sold?", name: "isSold", widget: "boolean", default: false },
+          { label: "Allow Offers?", name: "allowOffers", widget: "boolean", default: true }
+        ]}
