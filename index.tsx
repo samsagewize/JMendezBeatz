@@ -77,16 +77,19 @@ const App = () => {
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load Global Beats from JSON
+  // Load Global Beats from JSON - Using relative path to fix 404
   useEffect(() => {
-    fetch('/content/beats.json')
-      .then(res => res.json())
+    fetch('content/beats.json')
+      .then(res => {
+        if (!res.ok) throw new Error('File not found');
+        return res.json();
+      })
       .then(data => {
-        if (Array.isArray(data)) setGlobalBeats(data);
-        else if (data.beats) setGlobalBeats(data.beats);
+        const beatArray = Array.isArray(data) ? data : (data.beats || []);
+        if (beatArray.length > 0) setGlobalBeats(beatArray);
       })
       .catch(err => {
-        console.warn("Could not load beats.json, using fallback defaults", err);
+        console.warn("Could not load content/beats.json. Defaulting to local storage/fallback.", err);
       });
   }, []);
 
@@ -117,15 +120,18 @@ const App = () => {
   const handleUpload = (newBeatData: Omit<Beat, 'id' | 'producer'>) => {
     const newBeat: Beat = {
       ...newBeatData,
-      id: `local_${Date.now()}`,
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       producer: 'Jmendez Beatz',
       isSold: false
     } as Beat;
-    setLocalBeats([newBeat, ...localBeats]);
+    setLocalBeats(prev => [newBeat, ...prev]);
   };
 
   const deleteBeat = (id: string) => {
-    if (id.startsWith('global_')) return;
+    if (id.startsWith('global_')) {
+      alert("Global beats are managed via beats.json sync.");
+      return;
+    }
     if (confirm("Permanently delete this local beat?")) {
       setLocalBeats(localBeats.filter(b => b.id !== id));
       if (currentBeat?.id === id) {
