@@ -212,7 +212,23 @@ const App = () => {
               <span className="text-2xl font-black tracking-tighter uppercase italic">Jmendez Beatz</span>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
+              {/* Added Portal and Contact to top Nav */}
+              <div className="hidden md:flex items-center gap-6">
+                <button 
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-purple-500 transition-colors flex items-center gap-2"
+                >
+                  <LayoutDashboard size={16} /> Portal
+                </button>
+                <a 
+                  href={`mailto:${CONTACT_EMAIL}`}
+                  className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-pink-500 transition-colors flex items-center gap-2"
+                >
+                  <Mail size={16} /> Contact
+                </a>
+              </div>
+
               <button onClick={() => setIsCartOpen(true)} className="relative p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 group transition-all">
                 <ShoppingBag size={20} className="group-hover:scale-110 transition-transform" />
                 {cart.length > 0 && (
