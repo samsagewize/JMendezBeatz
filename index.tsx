@@ -7,11 +7,12 @@ import {
   Image as ImageIcon, Play, Pause, SkipBack, SkipForward, 
   Volume2, Download, Trash2, ShieldCheck, 
   CreditCard, Loader2, ExternalLink, CheckCircle2, Home, FileAudio,
-  AlertCircle, MessageSquareQuote, Send, Mail, Instagram, Twitter, Youtube, User, Info, Waves
+  AlertCircle, MessageSquareQuote, Send, Mail, Instagram, Twitter, Youtube, User, Info, Waves, Globe
 } from 'lucide-react';
 import AdminPortal from './components/AdminPortal';
 import BeatCard from './components/BeatCard';
 import CartModal from './components/CartModal';
+import { BEATS as GLOBAL_BEATS } from './constants';
 import { Beat, CartItem } from './types';
 
 // --- Constants ---
@@ -69,11 +70,14 @@ const AboutSection = () => (
 // --- Main App ---
 
 const App = () => {
-  // Load beats from localStorage on mount to ensure persistence
-  const [beats, setBeats] = useState<Beat[]>(() => {
-    const saved = localStorage.getItem('jmendez_beats');
+  // Load local beats from localStorage
+  const [localBeats, setLocalBeats] = useState<Beat[]>(() => {
+    const saved = localStorage.getItem('jmendez_local_beats');
     return saved ? JSON.parse(saved) : [];
   });
+  
+  // Combine global hardcoded beats with personal local beats
+  const beats = [...GLOBAL_BEATS, ...localBeats];
   
   const [currentBeat, setCurrentBeat] = useState<Beat | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -99,10 +103,10 @@ const App = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [progress, setProgress] = useState(0);
 
-  // Sync beats to localStorage whenever they change
+  // Sync personal local beats to localStorage
   useEffect(() => {
-    localStorage.setItem('jmendez_beats', JSON.stringify(beats));
-  }, [beats]);
+    localStorage.setItem('jmendez_local_beats', JSON.stringify(localBeats));
+  }, [localBeats]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -127,17 +131,21 @@ const App = () => {
   const handleUpload = (newBeatData: Omit<Beat, 'id' | 'producer'>) => {
     const newBeat: Beat = {
       ...newBeatData,
-      id: Date.now().toString(),
+      id: `local_${Date.now()}`,
       producer: 'Jmendez Beatz',
       isSold: false
     } as Beat;
 
-    setBeats([newBeat, ...beats]);
+    setLocalBeats([newBeat, ...localBeats]);
   };
 
   const deleteBeat = (id: string) => {
-    if (confirm("Permanently delete this beat?")) {
-      setBeats(beats.filter(b => b.id !== id));
+    if (id.startsWith('global_')) {
+      alert("Hardcoded beats cannot be deleted from the client. They are part of the core source code.");
+      return;
+    }
+    if (confirm("Permanently delete this local beat?")) {
+      setLocalBeats(localBeats.filter(b => b.id !== id));
       if (currentBeat?.id === id) {
         setCurrentBeat(null);
         setIsPlaying(false);
@@ -146,7 +154,11 @@ const App = () => {
   };
 
   const toggleSold = (id: string) => {
-    setBeats(beats.map(b => b.id === id ? { ...b, isSold: !b.isSold } : b));
+    if (id.startsWith('global_')) {
+      alert("Hardcoded global beats must be updated in the source constants.");
+      return;
+    }
+    setLocalBeats(localBeats.map(b => b.id === id ? { ...b, isSold: !b.isSold } : b));
   };
 
   const handleSendOffer = (e: React.FormEvent) => {
@@ -169,7 +181,6 @@ const App = () => {
   };
 
   const downloadFile = (url: string, filename: string) => {
-    // If it's a dropbox link, open it in a new tab for download
     if (url.includes('dropbox.com')) {
       window.open(url.replace('raw=1', 'dl=1'), '_blank');
     } else {
@@ -212,21 +223,12 @@ const App = () => {
               <span className="text-2xl font-black tracking-tighter uppercase italic">Jmendez Beatz</span>
             </div>
             
-            <div className="flex items-center gap-6">
-              {/* Added Portal and Contact to top Nav */}
-              <div className="hidden md:flex items-center gap-6">
-                <button 
-                  onClick={() => setIsAuthModalOpen(true)}
-                  className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-purple-500 transition-colors flex items-center gap-2"
-                >
-                  <LayoutDashboard size={16} /> Portal
-                </button>
-                <a 
-                  href={`mailto:${CONTACT_EMAIL}`}
-                  className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-pink-500 transition-colors flex items-center gap-2"
-                >
-                  <Mail size={16} /> Contact
-                </a>
+            <div className="flex items-center gap-8">
+              <div className="hidden lg:flex items-center gap-8">
+                <button onClick={() => setActiveView('marketplace')} className={`text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${activeView === 'marketplace' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Marketplace</button>
+                <button onClick={() => setActiveView('about')} className={`text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${activeView === 'about' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>About</button>
+                <button onClick={() => setIsAuthModalOpen(true)} className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-purple-500 transition-colors flex items-center gap-2"><LayoutDashboard size={14} /> Portal</button>
+                <a href={`mailto:${CONTACT_EMAIL}`} className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-pink-500 transition-colors flex items-center gap-2"><Mail size={14} /> Contact</a>
               </div>
 
               <button onClick={() => setIsCartOpen(true)} className="relative p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 group transition-all">
@@ -258,26 +260,18 @@ const App = () => {
                   </div>
                 </div>
 
-                {marketplaceBeats.length === 0 ? (
-                  <div className="text-center py-40 border border-white/5 rounded-3xl bg-white/5">
-                    <Music2 size={64} className="mx-auto mb-6 text-gray-600" />
-                    <h3 className="text-3xl font-black uppercase tracking-tighter italic">Crate Empty</h3>
-                    <p className="text-gray-500 mt-2">Upload your first hit in the Developer Portal.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-40">
-                    {marketplaceBeats.map(beat => (
-                      <BeatCard 
-                        key={beat.id} 
-                        beat={beat} 
-                        isPlaying={isPlaying && currentBeat?.id === beat.id} 
-                        onPlay={(b) => { if(currentBeat?.id === b.id) setIsPlaying(!isPlaying); else { setCurrentBeat(b); setIsPlaying(true); } }} 
-                        onAddToCart={(b, t) => { if(!b.isSold) { setCart([...cart, { beatId: b.id, title: b.title, price: t === 'Lease' ? b.priceLease : b.priceExclusive, licenseType: t, downloadUrl: b.audioUrl }]); setIsCartOpen(true); } }}
-                        onMakeOffer={(b: Beat) => { if(!b.isSold) setOfferBeat(b); }}
-                      />
-                    ))}
-                  </div>
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-40">
+                  {marketplaceBeats.map(beat => (
+                    <BeatCard 
+                      key={beat.id} 
+                      beat={beat} 
+                      isPlaying={isPlaying && currentBeat?.id === beat.id} 
+                      onPlay={(b) => { if(currentBeat?.id === b.id) setIsPlaying(!isPlaying); else { setCurrentBeat(b); setIsPlaying(true); } }} 
+                      onAddToCart={(b, t) => { if(!b.isSold) { setCart([...cart, { beatId: b.id, title: b.title, price: t === 'Lease' ? b.priceLease : b.priceExclusive, licenseType: t, downloadUrl: b.audioUrl }]); setIsCartOpen(true); } }}
+                      onMakeOffer={(b: Beat) => { if(!b.isSold) setOfferBeat(b); }}
+                    />
+                  ))}
+                </div>
               </div>
             ) : (
               <AboutSection />
