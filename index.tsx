@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { 
@@ -8,84 +7,82 @@ import {
   Image as ImageIcon, Play, Pause, SkipBack, SkipForward, 
   Volume2, Download, Trash2, ShieldCheck, 
   CreditCard, Loader2, ExternalLink, CheckCircle2, Home, FileAudio,
-  AlertCircle
+  AlertCircle, MessageSquareQuote, Send, Mail, Instagram, Twitter, Youtube, User, Info, Waves
 } from 'lucide-react';
-
-// --- Types ---
-interface Beat {
-  id: string;
-  title: string;
-  producer: string;
-  bpm: number;
-  key: string;
-  tags: string[];
-  priceLease: number;
-  priceExclusive: number;
-  audioUrl: string; // Stores Blob URL for local session
-  coverArt: string; // Stores Blob URL for local session
-  description: string;
-}
-
-interface CartItem {
-  beatId: string;
-  title: string;
-  price: number;
-  licenseType: 'Lease' | 'Exclusive';
-  downloadUrl?: string;
-}
+import AdminPortal from './components/AdminPortal';
+import BeatCard from './components/BeatCard';
+// Added missing import for CartModal
+import CartModal from './components/CartModal';
+import { Beat, CartItem } from './types';
 
 // --- Constants ---
 const SECRET_PASSWORD = 'BeatzbyMe';
-const STRIPE_LINK = "https://buy.stripe.com/test_00w9AU1px7y87pC1msgMw01";
-
-const INITIAL_BEATS: Beat[] = [
-  {
-    id: '1',
-    title: 'Midnight Phonk',
-    producer: 'Jmendez Beatz',
-    bpm: 140,
-    key: 'Cm',
-    tags: ['Phonk', 'Dark', 'Aggressive'],
-    priceLease: 24.99,
-    priceExclusive: 249.99,
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    coverArt: 'https://picsum.photos/seed/phonk/400/400',
-    description: 'A heavy distorted cowbell phonk beat perfect for drifting.'
-  }
-];
+// Updated Stripe link as requested by the user
+const STRIPE_LINK = "https://buy.stripe.com/9B67sKbfkaWB3Sm4cSaIM00";
+const CONTACT_EMAIL = "jmendezbeatz1@gmail.com";
+const INITIAL_BEATS: Beat[] = [];
 
 // --- Sub-Components ---
 
-const BeatCard = ({ beat, isPlaying, onPlay, onAddToCart }: { beat: Beat, isPlaying: boolean, onPlay: (b: Beat) => void, onAddToCart: (b: Beat, t: 'Lease' | 'Exclusive') => void }) => (
-  <div className="group relative glass rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2">
-    <div className="relative aspect-square overflow-hidden bg-zinc-900">
-      <img src={beat.coverArt} alt={beat.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-        <button onClick={() => onPlay(beat)} className="w-20 h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 active:scale-95 transition-transform shadow-2xl">
-          {isPlaying ? <Pause size={40} fill="currentColor" /> : <Play size={40} fill="currentColor" className="ml-1" />}
-        </button>
-      </div>
-      <div className="absolute top-4 right-4 flex gap-2">
-        <span className="bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black border border-white/10 uppercase tracking-widest">{beat.bpm} BPM</span>
-        <span className="bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black border border-white/10 uppercase tracking-widest">{beat.key}</span>
+const AboutSection = () => (
+  <div className="max-w-4xl mx-auto px-6 py-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="relative mb-16">
+      <div className="absolute -top-20 -left-20 w-64 h-64 bg-purple-600/20 blur-[100px] rounded-full" />
+      <h2 className="text-7xl md:text-9xl font-black italic tracking-tighter uppercase leading-none mb-8">
+        THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">ARCHITECT.</span>
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+        <div className="space-y-6 text-lg text-gray-400 leading-relaxed font-medium">
+          <p>
+            J Mendez is a multi-genre producer and sound designer dedicated to pushing the boundaries of modern sonics. With a signature style that blends gritty urban textures with polished cinematic atmospheres, he has become a go-to architect for artists looking to define their unique identity.
+          </p>
+          <p>
+            Operating out of his private studio, Mendez focuses on "sonic storytelling"—ensuring every kick, snare, and synth lead serves a narrative purpose. His work spans across Dark Trap, Phonk, Melodic Drill, and Experimental R&B.
+          </p>
+          <div className="pt-8 flex flex-wrap gap-4">
+            <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-3">
+              <Waves className="text-purple-500" size={20} />
+              <span className="text-xs font-black uppercase tracking-widest">Industry Masters</span>
+            </div>
+            <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-3">
+              <ShieldCheck className="text-pink-500" size={20} />
+              <span className="text-xs font-black uppercase tracking-widest">Verified Rights</span>
+            </div>
+          </div>
+        </div>
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-[3rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
+          <div className="relative aspect-[4/5] bg-zinc-900 rounded-[3.5rem] overflow-hidden border border-white/10">
+            <img 
+              src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=2070&auto=format&fit=crop" 
+              alt="Studio Booth" 
+              className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
+            />
+            <div className="absolute bottom-10 left-10">
+              <span className="text-4xl font-black italic tracking-tighter uppercase block">J MENDEZ</span>
+              <span className="text-xs font-black uppercase tracking-[0.4em] text-purple-400">Chief Engineer</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div className="p-6">
-      <h3 className="font-black text-xl truncate mb-1 italic uppercase tracking-tighter">{beat.title}</h3>
-      <p className="text-purple-400 text-xs font-bold mb-4 uppercase tracking-[0.2em]">{beat.producer}</p>
-      <div className="flex flex-wrap gap-2 mb-6">
-        {beat.tags.map(tag => <span key={tag} className="text-[10px] px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-gray-400 font-bold uppercase">#{tag}</span>)}
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => onAddToCart(beat, 'Lease')} className="flex flex-col items-center justify-center py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all group/btn">
-          <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Lease</span>
-          <span className="text-sm font-bold">${beat.priceLease}</span>
-        </button>
-        <button onClick={() => onAddToCart(beat, 'Exclusive')} className="flex flex-col items-center justify-center py-3 bg-purple-600 hover:bg-purple-500 rounded-2xl transition-all shadow-lg shadow-purple-900/40">
-          <span className="text-[9px] text-purple-200 uppercase font-black tracking-widest mb-1">Exclusive</span>
-          <span className="text-sm font-bold">${beat.priceExclusive}</span>
-        </button>
-      </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32">
+       <div className="p-10 glass rounded-[2.5rem] border border-white/5 space-y-4">
+          <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-purple-500"><Music2 size={24} /></div>
+          <h4 className="font-black uppercase italic tracking-tight text-xl">Custom Production</h4>
+          <p className="text-sm text-gray-500 leading-relaxed">Exclusive bespoke production tailored to your vocal range and artistic vision.</p>
+       </div>
+       <div className="p-10 glass rounded-[2.5rem] border border-white/5 space-y-4">
+          <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-pink-500"><Waves size={24} /></div>
+          <h4 className="font-black uppercase italic tracking-tight text-xl">Mixing & Mastering</h4>
+          <p className="text-sm text-gray-500 leading-relaxed">Transform your rough demos into radio-ready singles with industry standard processing.</p>
+       </div>
+       <div className="p-10 glass rounded-[2.5rem] border border-white/5 space-y-4">
+          <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-blue-500"><ShieldCheck size={24} /></div>
+          <h4 className="font-black uppercase italic tracking-tight text-xl">Sound Design</h4>
+          <p className="text-sm text-gray-500 leading-relaxed">Unique texture creation and foley recording for filmmakers and game developers.</p>
+       </div>
     </div>
   </div>
 );
@@ -101,23 +98,22 @@ const App = () => {
   const [isCheckoutSuccess, setIsCheckoutSuccess] = useState(false);
   const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [activeView, setActiveView] = useState<'marketplace' | 'about'>('marketplace');
+
+  // Modal States
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Offer Modal States
+  const [offerBeat, setOfferBeat] = useState<Beat | null>(null);
+  const [isOfferSent, setIsOfferSent] = useState(false);
+  const [offerForm, setOfferForm] = useState({ amount: '', email: '', message: '' });
 
-  // Audio Player State
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [progress, setProgress] = useState(0);
-
-  // Admin Upload States
-  const [adminForm, setAdminForm] = useState({
-    title: '', bpm: 140, key: 'Cm', tags: '', priceLease: 24.99, priceExclusive: 249.99, description: ''
-  });
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -139,46 +135,58 @@ const App = () => {
     }
   };
 
-  const handleUpload = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!audioFile || !coverFile) {
-      alert("Error: Both Audio and Cover files are mandatory for distribution.");
-      return;
-    }
-
-    const audioUrl = URL.createObjectURL(audioFile);
-    const coverArt = URL.createObjectURL(coverFile);
-
+  const handleUpload = (newBeatData: Omit<Beat, 'id' | 'producer'>) => {
     const newBeat: Beat = {
-      ...adminForm,
+      ...newBeatData,
       id: Date.now().toString(),
       producer: 'Jmendez Beatz',
-      tags: adminForm.tags.split(',').map(t => t.trim()).filter(t => t),
-      audioUrl,
-      coverArt
-    };
+      isSold: false
+    } as Beat;
 
     setBeats([newBeat, ...beats]);
-    setIsAdminPortalOpen(false);
-    // Reset form
-    setAdminForm({ title: '', bpm: 140, key: 'Cm', tags: '', priceLease: 24.99, priceExclusive: 249.99, description: '' });
-    setAudioFile(null);
-    setCoverFile(null);
+  };
+
+  const deleteBeat = (id: string) => {
+    if (confirm("Permanently delete this beat from the marketplace?")) {
+      setBeats(beats.filter(b => b.id !== id));
+      if (currentBeat?.id === id) {
+        setCurrentBeat(null);
+        setIsPlaying(false);
+      }
+    }
+  };
+
+  const toggleSold = (id: string) => {
+    setBeats(beats.map(b => b.id === id ? { ...b, isSold: !b.isSold } : b));
+  };
+
+  const handleSendOffer = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    
+    console.log("SENDING OFFER EMAIL TO PRODUCER...", {
+      to: CONTACT_EMAIL,
+      from: offerForm.email,
+      subject: `NEW OFFER: $${offerForm.amount} for "${offerBeat?.title}"`,
+      body: offerForm.message
+    });
+
+    setTimeout(() => {
+      setIsProcessing(false);
+      setIsOfferSent(true);
+      setOfferForm({ amount: '', email: '', message: '' });
+    }, 2000);
   };
 
   const handleCheckout = () => {
     setIsProcessing(true);
-    // Open the user's provided Stripe link
-    window.open(STRIPE_LINK, '_blank');
-    
-    // Simulate successful redirect/return
-    setTimeout(() => {
-      setPurchasedItems([...cart]);
-      setCart([]);
-      setIsCartOpen(false);
-      setIsCheckoutSuccess(true);
-      setIsProcessing(false);
-    }, 2800);
+    // Stripe link is opened via CartModal. 
+    // handleCheckout is called to finalize the UI state after the simulated return from Stripe.
+    setPurchasedItems([...cart]);
+    setCart([]);
+    setIsCartOpen(false);
+    setIsCheckoutSuccess(true);
+    setIsProcessing(false);
   };
 
   const downloadFile = (url: string, filename: string) => {
@@ -190,317 +198,246 @@ const App = () => {
     document.body.removeChild(link);
   };
 
-  const filteredBeats = beats.filter(b => 
-    b.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    b.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const marketplaceBeats = beats.filter(b => !b.isSold && b.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-[#070707] text-white selection:bg-purple-500/50">
+    <div className="min-h-screen bg-[#070707] text-white selection:bg-purple-500/50 flex flex-col pb-32">
       {isCheckoutSuccess ? (
         <div className="fixed inset-0 z-[100] bg-[#070707] flex flex-col items-center justify-center p-6 text-center">
-          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none" />
           <div className="mb-10 text-green-500 animate-[bounce_1.5s_infinite] shadow-[0_0_50px_rgba(34,197,94,0.3)] rounded-full"><CheckCircle2 size={100} /></div>
           <h1 className="text-7xl font-black mb-4 italic tracking-tighter uppercase leading-none">ORDER SECURED</h1>
-          <p className="text-gray-400 mb-12 max-w-lg text-lg font-medium">Payment confirmed. Your production assets are ready for download.</p>
-          
+          <p className="text-gray-400 mb-12 max-w-lg text-lg">Your files are unlocked. Download below.</p>
           <div className="w-full max-w-2xl glass rounded-[3rem] border border-white/10 divide-y divide-white/5 mb-10 overflow-hidden shadow-2xl">
             {purchasedItems.map((item, i) => (
               <div key={i} className="p-8 flex flex-col sm:flex-row items-center justify-between gap-6 hover:bg-white/5 transition-colors group">
                 <div className="text-left flex items-center gap-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform"><FileAudio size={32} /></div>
-                  <div>
-                    <h4 className="font-black text-2xl italic tracking-tight uppercase">{item.title}</h4>
-                    <p className="text-xs text-purple-400 font-black uppercase tracking-[0.3em]">{item.licenseType} Distribution Rights</p>
-                  </div>
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-500 rounded-2xl flex items-center justify-center"><FileAudio size={32} /></div>
+                  <div><h4 className="font-black text-2xl italic tracking-tight uppercase">{item.title}</h4><p className="text-xs text-purple-400 font-black uppercase tracking-[0.3em]">{item.licenseType} Distribution</p></div>
                 </div>
-                <button 
-                  onClick={() => downloadFile(item.downloadUrl || '', `${item.title}_Master.wav`)} 
-                  className="px-10 py-5 bg-white text-black font-black uppercase text-sm rounded-[1.5rem] flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10"
-                >
-                  <Download size={22} /> Download WAV
-                </button>
+                <button onClick={() => downloadFile(item.downloadUrl || '', `${item.title}_Master.wav`)} className="px-10 py-5 bg-white text-black font-black uppercase text-sm rounded-[1.5rem] flex items-center gap-3 hover:scale-105 transition-all"><Download size={22} /> Download Master</button>
               </div>
             ))}
           </div>
-          
-          <button onClick={() => setIsCheckoutSuccess(false)} className="flex items-center gap-2 text-gray-500 hover:text-white font-black uppercase text-xs tracking-[0.4em] transition-all"><Home size={18} /> BACK TO STOREFRONT</button>
+          <button onClick={() => setIsCheckoutSuccess(false)} className="flex items-center gap-2 text-gray-500 hover:text-white font-black uppercase text-xs tracking-[0.4em] transition-all"><Home size={18} /> BACK TO STORE</button>
         </div>
       ) : (
         <>
-          {/* Top Bar */}
+          {/* Top Brand Bar */}
           <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-10 py-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl shadow-purple-900/40"><Music2 size={28} /></div>
-              <span className="text-3xl font-black tracking-tighter uppercase italic bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">Jmendez Beatz</span>
+              <div className="w-10 h-10 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-xl flex items-center justify-center"><Music2 size={24} /></div>
+              <span className="text-2xl font-black tracking-tighter uppercase italic">Jmendez Beatz</span>
             </div>
             
-            <div className="hidden lg:flex items-center gap-12 text-[11px] font-black uppercase tracking-[0.25em] text-gray-400">
-              <a href="#" className="text-white hover:text-purple-400 transition-colors">Marketplace</a>
-              <button onClick={() => setIsAuthModalOpen(true)} className="flex items-center gap-2 hover:text-purple-400 transition-colors bg-white/5 px-6 py-3 rounded-full border border-white/5 shadow-inner hover:border-purple-500/30 transition-all"><LayoutDashboard size={14} /> Developer Portal</button>
+            <div className="flex items-center gap-4">
+              <button onClick={() => setIsCartOpen(true)} className="relative p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 group transition-all">
+                <ShoppingBag size={20} className="group-hover:scale-110 transition-transform" />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-purple-600 text-[10px] font-black flex items-center justify-center rounded-full border-2 border-[#070707]">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
             </div>
-
-            <button onClick={() => setIsCartOpen(true)} className="relative p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all group">
-              <ShoppingBag size={24} className="group-hover:scale-110 transition-transform" />
-              {cart.length > 0 && <span className="absolute -top-1 -right-1 w-7 h-7 bg-purple-600 text-[11px] font-black flex items-center justify-center rounded-full border-2 border-[#070707] shadow-lg animate-pulse">{cart.length}</span>}
-            </button>
           </nav>
 
-          {/* Hero & Market */}
-          <main className="pt-56 pb-48 max-w-7xl mx-auto px-10">
-            <div className="max-w-5xl mb-32 relative">
-              <div className="absolute -top-32 -left-32 -z-10 w-[600px] h-[600px] bg-purple-600/10 blur-[150px] rounded-full pointer-events-none" />
-              <h1 className="text-8xl md:text-[10rem] font-black tracking-tighter mb-10 leading-[0.8] italic uppercase">ELEVATE <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">SOUND.</span></h1>
-              <p className="text-3xl text-gray-500 mb-16 max-w-3xl font-medium leading-tight">Elite-tier production marketplace. Secure distribution rights and instant local fulfillment.</p>
-              
-              <div className="relative max-w-2xl group">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-purple-500 transition-colors" size={28} />
-                <input 
-                  type="text" 
-                  placeholder="SEARCH VIBE, GENRE, OR BPM..." 
-                  value={searchQuery} 
-                  onChange={e => setSearchQuery(e.target.value)} 
-                  className="w-full bg-white/5 border border-white/10 rounded-[2.5rem] py-7 pl-16 pr-8 text-xl font-bold focus:ring-8 focus:ring-purple-600/10 focus:border-purple-600/40 outline-none transition-all shadow-3xl placeholder:text-gray-800 tracking-tighter" 
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
-              {filteredBeats.map(beat => (
-                <BeatCard 
-                  key={beat.id} 
-                  beat={beat} 
-                  isPlaying={isPlaying && currentBeat?.id === beat.id} 
-                  onPlay={(b) => { 
-                    if(currentBeat?.id === b.id) setIsPlaying(!isPlaying); 
-                    else { setCurrentBeat(b); setIsPlaying(true); } 
-                  }} 
-                  onAddToCart={(b, t) => { 
-                    setCart([...cart, { 
-                      beatId: b.id, 
-                      title: b.title, 
-                      price: t === 'Lease' ? b.priceLease : b.priceExclusive, 
-                      licenseType: t, 
-                      downloadUrl: b.audioUrl 
-                    }]); 
-                    setIsCartOpen(true); 
-                  }} 
-                />
-              ))}
-              {filteredBeats.length === 0 && (
-                <div className="col-span-full py-40 text-center opacity-30">
-                  <Music size={100} className="mx-auto mb-6" />
-                  <p className="text-3xl font-black italic uppercase tracking-widest">No Sonics Found</p>
+          <main className="pt-32 flex-1">
+            {activeView === 'marketplace' ? (
+              <div className="max-w-7xl mx-auto px-10">
+                <div className="max-w-4xl mb-24 relative">
+                  <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 leading-[0.9] italic uppercase">
+                    Your Next Hit <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">Starts Here.</span>
+                  </h1>
+                  <p className="text-gray-500 text-xs md:text-sm font-black uppercase tracking-[0.3em] max-w-2xl mb-12">
+                    All beats are digital downloads, available instantly after purchase
+                  </p>
+                  <div className="flex flex-col md:flex-row items-center gap-6 max-w-4xl">
+                    <div className="relative flex-1 group w-full">
+                      <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-purple-500" size={24} />
+                      <input type="text" placeholder="SEARCH CRATE..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl py-6 pl-14 pr-8 text-lg font-bold focus:ring-4 focus:ring-purple-600/10 outline-none transition-all tracking-tighter" />
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                {marketplaceBeats.length === 0 ? (
+                  <div className="text-center py-40 border border-white/5 rounded-3xl bg-white/5">
+                    <Music2 size={64} className="mx-auto mb-6 text-gray-600" />
+                    <h3 className="text-3xl font-black uppercase tracking-tighter italic">Crate Empty</h3>
+                    <p className="text-gray-500 mt-2">No available beats currently listed in the marketplace.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-40">
+                    {marketplaceBeats.map(beat => (
+                      <BeatCard 
+                        key={beat.id} 
+                        beat={beat} 
+                        isPlaying={isPlaying && currentBeat?.id === beat.id} 
+                        onPlay={(b) => { if(currentBeat?.id === b.id) setIsPlaying(!isPlaying); else { setCurrentBeat(b); setIsPlaying(true); } }} 
+                        onAddToCart={(b, t) => { if(!b.isSold) { setCart([...cart, { beatId: b.id, title: b.title, price: t === 'Lease' ? b.priceLease : b.priceExclusive, licenseType: t, downloadUrl: b.audioUrl }]); setIsCartOpen(true); } }}
+                        onMakeOffer={(b: Beat) => { if(!b.isSold) setOfferBeat(b); }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <AboutSection />
+            )}
           </main>
 
-          {/* Player Footer */}
+          {/* Fixed Bottom Dock - App Style */}
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-[95%] max-w-lg">
+            <div className="glass rounded-[2.5rem] p-2 border border-white/10 flex items-center justify-around shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+              <button 
+                onClick={() => setActiveView('marketplace')}
+                className={`flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl transition-all ${activeView === 'marketplace' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+              >
+                <Music size={22} className={activeView === 'marketplace' ? 'fill-current' : ''} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Market</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveView('about')}
+                className={`flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl transition-all ${activeView === 'about' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
+              >
+                <Info size={22} className={activeView === 'about' ? 'fill-current' : ''} />
+                <span className="text-[10px] font-black uppercase tracking-widest">About</span>
+              </button>
+
+              <button 
+                onClick={() => setIsAuthModalOpen(true)}
+                className="flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl text-gray-500 hover:text-purple-400 transition-all"
+              >
+                <LayoutDashboard size={22} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Portal</span>
+              </button>
+
+              <a 
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="flex flex-col items-center gap-1 flex-1 py-3 rounded-3xl text-gray-500 hover:text-pink-400 transition-all"
+              >
+                <Mail size={22} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Contact</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Player Footer - Floating above Dock */}
           {currentBeat && (
-            <div className="fixed bottom-0 left-0 right-0 z-50 p-8">
-              <div className="max-w-7xl mx-auto glass rounded-[2.5rem] p-6 shadow-2xl border border-white/10 relative overflow-hidden">
+            <div className="fixed bottom-28 left-0 right-0 z-50 px-6 pointer-events-none">
+              <div className="max-w-4xl mx-auto glass rounded-[2rem] p-4 shadow-2xl border border-white/10 relative overflow-hidden pointer-events-auto">
                 <audio 
                   ref={audioRef} 
                   src={currentBeat.audioUrl} 
                   onTimeUpdate={() => setProgress((audioRef.current?.currentTime || 0) / (audioRef.current?.duration || 1) * 100)} 
                   onEnded={() => setIsPlaying(false)} 
+                  controlsList="nodownload" 
+                  onContextMenu={(e) => e.preventDefault()}
                 />
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/5">
-                  <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-[0_0_20px_rgba(168,85,247,0.8)] transition-all duration-300" style={{ width: `${progress}%` }} />
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-6 w-1/3">
-                    <img src={currentBeat.coverArt} className="w-16 h-16 rounded-[1.2rem] object-cover shadow-2xl border border-white/10" />
-                    <div className="hidden md:block truncate">
-                      <h4 className="font-black text-2xl truncate tracking-tight uppercase italic leading-none mb-1">{currentBeat.title}</h4>
-                      <p className="text-purple-500 text-xs font-black uppercase tracking-[0.3em]">{currentBeat.producer}</p>
-                    </div>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-white/5"><div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-[0_0_20px_rgba(168,85,247,0.8)]" style={{ width: `${progress}%` }} /></div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 w-1/3">
+                    <img src={currentBeat.coverArt} className="w-12 h-12 rounded-xl object-cover border border-white/10" />
+                    <div className="hidden sm:block truncate"><h4 className="font-black text-sm truncate uppercase italic leading-none">{currentBeat.title}</h4></div>
                   </div>
-                  <div className="flex items-center gap-10">
-                    <button className="text-gray-600 hover:text-white transition-colors transform active:scale-90"><SkipBack size={28} fill="currentColor" /></button>
-                    <button onClick={() => setIsPlaying(!isPlaying)} className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shadow-2xl">
-                      {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
+                  <div className="flex items-center gap-8">
+                    <button onClick={() => setIsPlaying(!isPlaying)} className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 active:scale-90 transition-transform">
+                      {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
                     </button>
-                    <button className="text-gray-600 hover:text-white transition-colors transform active:scale-90"><SkipForward size={28} fill="currentColor" /></button>
                   </div>
-                  <div className="w-1/3 flex justify-end gap-8 text-gray-500">
-                    <Volume2 size={26} className="hidden sm:block hover:text-white transition-colors cursor-pointer" />
-                    <button onClick={() => downloadFile(currentBeat.audioUrl, `${currentBeat.title}_Demo.wav`)} className="hover:text-white transition-colors transform hover:scale-110 active:scale-90"><Download size={26} /></button>
+                  <div className="w-1/3 flex justify-end gap-4 text-gray-500">
+                    <Volume2 size={20} className="hidden sm:block" />
+                    <Lock size={20} />
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Developer Portal (Admin) */}
-          {isAdminPortalOpen && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/98 backdrop-blur-[60px]">
-              <div className="w-full max-w-5xl glass rounded-[4rem] border border-purple-500/20 max-h-[95vh] flex flex-col overflow-hidden shadow-2xl">
-                <div className="p-12 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-purple-900/20 via-transparent to-transparent">
-                  <div>
-                    <h2 className="text-5xl font-black uppercase italic tracking-tighter flex items-center gap-5"><Upload className="text-purple-500" /> MASTER UPLOAD</h2>
-                    <p className="text-gray-500 text-sm font-black uppercase tracking-[0.4em] mt-2">Publishing Interface • Jmendez Protocol</p>
-                  </div>
-                  <button onClick={() => setIsAdminPortalOpen(false)} className="w-14 h-14 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-500 hover:text-white transition-all"><X size={40} /></button>
-                </div>
-                
-                <form onSubmit={handleUpload} className="p-12 overflow-y-auto space-y-12 scrollbar-hide">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                    <div className="space-y-10">
-                      <div>
-                        <label className="text-[11px] font-black uppercase text-purple-500 tracking-[0.3em] mb-3 block">Production Title</label>
-                        <input required placeholder="E.G. CHROME SOUL" className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-xl focus:border-purple-500 outline-none uppercase font-black italic tracking-tight" value={adminForm.title} onChange={e => setAdminForm({...adminForm, title: e.target.value})} />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-8">
-                        <div>
-                          <label className="text-[11px] font-black uppercase text-gray-500 tracking-[0.3em] mb-3 block">BPM</label>
-                          <input required type="number" className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-xl outline-none focus:border-white/30 font-bold" value={adminForm.bpm} onChange={e => setAdminForm({...adminForm, bpm: parseInt(e.target.value)})} />
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-black uppercase text-gray-500 tracking-[0.3em] mb-3 block">Scale Key</label>
-                          <input required placeholder="AM" className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-xl outline-none focus:border-white/30 font-bold uppercase" value={adminForm.key} onChange={e => setAdminForm({...adminForm, key: e.target.value})} />
-                        </div>
-                      </div>
-
-                      <div className="space-y-5">
-                        <label className="text-[11px] font-black uppercase text-pink-500 tracking-[0.3em] mb-3 block">Master Distribution File (WAV/MP3)</label>
-                        <div className={`relative border-2 border-dashed rounded-[2.5rem] p-12 transition-all flex flex-col items-center justify-center text-center gap-4 ${audioFile ? 'border-green-500 bg-green-500/5' : 'border-white/10 hover:border-purple-500/50 hover:bg-white/5'}`}>
-                          <input required type="file" accept="audio/*" onChange={e => setAudioFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
-                          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${audioFile ? 'bg-green-500 text-black shadow-lg shadow-green-500/20' : 'bg-white/10 text-gray-400'}`}><Music size={32} /></div>
-                          <span className="font-black text-sm uppercase tracking-[0.2em]">{audioFile ? audioFile.name : 'Select Master File'}</span>
-                        </div>
-                      </div>
+          {/* Portals and Modals (Offer, Auth, Admin, Cart) */}
+          {offerBeat && (
+            <div className="fixed inset-0 z-[130] flex items-center justify-center p-6 bg-black/95 backdrop-blur-3xl">
+              <div className="absolute inset-0" onClick={() => { setOfferBeat(null); setIsOfferSent(false); }} />
+              <div className="relative w-full max-w-xl glass rounded-[3rem] p-12 border border-purple-500/30 shadow-3xl">
+                {!isOfferSent ? (
+                  <>
+                    <div className="text-center mb-10">
+                      <div className="w-20 h-20 bg-purple-600/10 text-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-purple-500/20"><MessageSquareQuote size={40} /></div>
+                      <h2 className="text-3xl font-black uppercase italic tracking-tighter">PITCH YOUR OFFER</h2>
+                      <p className="text-gray-500 text-sm mt-3 font-bold uppercase tracking-[0.2em]">Exclusive for "{offerBeat.title}"</p>
                     </div>
-
-                    <div className="space-y-10">
-                      <div className="grid grid-cols-2 gap-8">
+                    <form onSubmit={handleSendOffer} className="space-y-6">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-[11px] font-black uppercase text-gray-500 tracking-[0.3em] mb-3 block">Lease Price ($)</label>
-                          <input type="number" step="0.01" className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-xl font-bold outline-none" value={adminForm.priceLease} onChange={e => setAdminForm({...adminForm, priceLease: parseFloat(e.target.value)})} />
+                          <label className="text-[10px] font-black uppercase text-purple-500 tracking-[0.3em] mb-2 block">Offer ($)</label>
+                          <input required type="number" placeholder="500" className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-6 text-xl font-black focus:border-purple-500 outline-none" value={offerForm.amount} onChange={e => setOfferForm({...offerForm, amount: e.target.value})} />
                         </div>
                         <div>
-                          <label className="text-[11px] font-black uppercase text-gray-500 tracking-[0.3em] mb-3 block">Exclusive ($)</label>
-                          <input type="number" step="0.01" className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-xl font-bold outline-none" value={adminForm.priceExclusive} onChange={e => setAdminForm({...adminForm, priceExclusive: parseFloat(e.target.value)})} />
+                          <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.3em] mb-2 block">Email</label>
+                          <input required type="email" placeholder="artist@studio.com" className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-6 text-sm font-bold focus:border-white/30 outline-none" value={offerForm.email} onChange={e => setOfferForm({...offerForm, email: e.target.value})} />
                         </div>
                       </div>
-
-                      <div>
-                        <label className="text-[11px] font-black uppercase text-gray-500 tracking-[0.3em] mb-3 block">Mood Tags (Comma separated)</label>
-                        <input placeholder="Trap, Melodic, Dark" className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 outline-none focus:border-white/30 font-bold" value={adminForm.tags} onChange={e => setAdminForm({...adminForm, tags: e.target.value})} />
-                      </div>
-
-                      <div className="space-y-5">
-                        <label className="text-[11px] font-black uppercase text-blue-500 tracking-[0.3em] mb-3 block">Visual Art (High Res Cover)</label>
-                        <div className={`relative border-2 border-dashed rounded-[2.5rem] p-12 transition-all flex flex-col items-center justify-center text-center gap-4 ${coverFile ? 'border-blue-500 bg-blue-500/5' : 'border-white/10 hover:border-blue-500/50 hover:bg-white/5'}`}>
-                          <input required type="file" accept="image/*" onChange={e => setCoverFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
-                          {coverFile ? (
-                            <div className="relative">
-                              <img src={URL.createObjectURL(coverFile)} className="w-24 h-24 rounded-2xl object-cover shadow-2xl border border-blue-500/50" />
-                              <div className="absolute -top-3 -right-3 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-black border-4 border-[#070707]"><CheckCircle2 size={16} /></div>
-                            </div>
-                          ) : (
-                            <div className="w-16 h-16 rounded-2xl bg-white/10 text-gray-400 flex items-center justify-center"><ImageIcon size={32} /></div>
-                          )}
-                          <span className="font-black text-sm uppercase tracking-[0.2em]">{coverFile ? coverFile.name : 'Select Cover Art'}</span>
-                        </div>
-                      </div>
-                    </div>
+                      <textarea required rows={3} placeholder="Tell Jmendez about your project..." className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 outline-none focus:border-white/30 text-sm resize-none" value={offerForm.message} onChange={e => setOfferForm({...offerForm, message: e.target.value})} />
+                      <button type="submit" disabled={isProcessing} className="w-full bg-purple-600 text-white py-5 rounded-2xl font-black uppercase text-lg italic tracking-tighter hover:bg-purple-500 transition-all flex items-center justify-center gap-4">
+                        {isProcessing ? <Loader2 size={24} className="animate-spin" /> : <><Send size={20} /> DISPATCH OFFER</>}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <div className="text-center py-10">
+                    <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-green-500/20"><CheckCircle2 size={40} /></div>
+                    <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-4">OFFER DISPATCHED</h2>
+                    <p className="text-gray-400 text-sm mb-8 leading-relaxed">Jmendez will contact you at <span className="text-white font-black">{offerForm.email}</span> within 24 hours.</p>
+                    <button onClick={() => setOfferBeat(null)} className="px-10 py-4 bg-white text-black font-black uppercase italic tracking-tighter rounded-xl hover:scale-105 transition-all">Back to Market</button>
                   </div>
-
-                  <button type="submit" className="w-full bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 py-8 rounded-[2.5rem] font-black text-3xl uppercase italic shadow-3xl shadow-purple-900/50 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-5 group">
-                    <Plus className="group-hover:rotate-180 transition-transform duration-700" size={36} /> DEPLOY TO MARKETPLACE
-                  </button>
-                </form>
+                )}
               </div>
             </div>
           )}
 
-          {/* Admin Authentication Modal */}
           {isAuthModalOpen && (
             <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/95 backdrop-blur-3xl">
-              <div className={`w-full max-w-md glass rounded-[4rem] p-12 border-t-2 border-purple-500/50 shadow-3xl ${authError ? 'animate-shake border-red-500' : ''}`}>
-                <div className="text-center mb-12">
-                  <div className="w-24 h-24 bg-purple-600/10 text-purple-500 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-purple-500/20 shadow-inner"><Lock size={48} /></div>
-                  <h2 className="text-4xl font-black uppercase italic tracking-tighter">DEVELOPER ACCESS</h2>
-                  <p className="text-gray-500 text-sm mt-3 font-bold uppercase tracking-[0.2em]">Enter Jmendez Protocol Key</p>
-                </div>
-                <form onSubmit={handleAuth} className="space-y-8">
-                  <div className="relative">
-                    <input autoFocus type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-white/5 border border-white/10 rounded-2xl py-6 px-8 text-center text-2xl tracking-[0.5em] focus:border-purple-500 outline-none transition-all placeholder:text-gray-800 placeholder:tracking-normal font-black" />
-                    {authError && <div className="absolute -bottom-10 left-0 right-0 text-center text-red-500 text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2"><AlertCircle size={14} /> Authentication Failure</div>}
-                  </div>
-                  <button type="submit" className="w-full bg-white text-black py-6 rounded-[1.5rem] font-black text-xl uppercase italic tracking-tighter hover:bg-purple-50 transition-all shadow-2xl active:scale-95">Verify Identity</button>
-                  <button type="button" onClick={() => setIsAuthModalOpen(false)} className="w-full text-xs text-gray-700 uppercase tracking-[0.5em] font-black pt-4 hover:text-white transition-colors">Terminate Attempt</button>
+              <div className={`w-full max-w-md glass rounded-[3rem] p-12 border-t-2 border-purple-500/50 shadow-3xl ${authError ? 'animate-shake border-red-500' : ''}`}>
+                <div className="text-center mb-10"><div className="w-20 h-20 bg-purple-600/10 text-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-purple-500/20 shadow-inner"><Lock size={32} /></div><h2 className="text-3xl font-black uppercase italic tracking-tighter">DEVELOPER ACCESS</h2></div>
+                <form onSubmit={handleAuth} className="space-y-6">
+                  <input autoFocus type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-white/5 border border-white/10 rounded-xl py-5 px-6 text-center text-xl tracking-[0.5em] focus:border-purple-500 outline-none transition-all placeholder:text-gray-800 font-black" />
+                  <button type="submit" className="w-full bg-white text-black py-5 rounded-2xl font-black text-lg uppercase italic tracking-tighter hover:bg-purple-50 transition-all">Verify Identity</button>
+                  <button type="button" onClick={() => setIsAuthModalOpen(false)} className="w-full text-[10px] text-gray-700 uppercase tracking-[0.5em] font-black pt-4 hover:text-white transition-colors">Terminate Attempt</button>
                 </form>
               </div>
             </div>
           )}
 
-          {/* Cart View */}
-          {isCartOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
-              <div className="relative w-full max-w-2xl glass rounded-[4rem] overflow-hidden border border-white/10 shadow-3xl">
-                {isProcessing && (
-                  <div className="absolute inset-0 z-10 bg-black/80 backdrop-blur-3xl flex flex-col items-center justify-center text-center p-12">
-                    <Loader2 className="w-20 h-20 text-purple-500 animate-spin mb-8" />
-                    <h3 className="text-4xl font-black italic uppercase tracking-tighter">SECURING PIPELINE...</h3>
-                    <p className="text-gray-500 text-sm font-black uppercase tracking-[0.4em]">Stripe Checkout Interface Opening</p>
-                  </div>
-                )}
-                
-                <div className="p-10 border-b border-white/10 flex items-center justify-between bg-white/5">
-                  <h2 className="text-3xl font-black italic uppercase tracking-tighter">DIGITAL CRATE</h2>
-                  <button onClick={() => setIsCartOpen(false)} className="w-12 h-12 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-500 hover:text-white transition-all"><X size={32} /></button>
-                </div>
-                
-                <div className="max-h-[45vh] overflow-y-auto p-10 space-y-6 scrollbar-hide">
-                  {cart.length === 0 ? (
-                    <div className="text-center py-20 opacity-20">
-                      <ShoppingBag size={80} className="mx-auto mb-6" />
-                      <p className="text-xl font-black uppercase tracking-[0.4em]">Crate Empty</p>
-                    </div>
-                  ) : cart.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-6 bg-white/5 rounded-[2rem] border border-white/5 hover:border-white/10 transition-all group">
-                      <div className="flex items-center gap-6">
-                        <div className="w-12 h-12 bg-purple-600/20 text-purple-500 rounded-xl flex items-center justify-center font-black">{idx + 1}</div>
-                        <div>
-                          <h4 className="font-black italic uppercase text-2xl tracking-tight">{item.title}</h4>
-                          <p className="text-[10px] text-purple-500 uppercase font-black tracking-[0.3em]">{item.licenseType} Rights</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-8">
-                        <span className="font-black text-2xl italic">${item.price}</span>
-                        <button onClick={() => setCart(cart.filter((_, i) => i !== idx))} className="text-gray-700 hover:text-red-500 transition-colors transform hover:scale-110"><Trash2 size={24} /></button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          {isAdminPortalOpen && (
+            <AdminPortal 
+              isOpen={isAdminPortalOpen}
+              onClose={() => setIsAdminPortalOpen(false)}
+              onUpload={handleUpload}
+              beats={beats}
+              onDelete={deleteBeat}
+              onToggleSold={toggleSold}
+            />
+          )}
 
-                {cart.length > 0 && (
-                  <div className="p-12 bg-black/60 border-t border-white/10">
-                    <div className="flex justify-between items-center mb-10">
-                      <span className="text-gray-600 font-black uppercase tracking-[0.4em] text-sm">TOTAL INVESTMENT</span>
-                      <span className="text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-600">${cart.reduce((s,i) => s + i.price, 0).toFixed(2)}</span>
-                    </div>
-                    <button onClick={handleCheckout} className="w-full bg-white text-black py-7 rounded-[2.5rem] font-black uppercase text-2xl italic flex items-center justify-center gap-4 hover:bg-purple-50 transition-all shadow-3xl active:scale-[0.98]"><CreditCard size={32} /> ACQUIRE ASSETS <ExternalLink size={20} /></button>
-                    <div className="flex items-center justify-center gap-3 mt-8 text-[11px] font-black uppercase tracking-[0.5em] text-gray-700"><ShieldCheck size={16} /> JMZ ENCRYPTED ENDPOINT</div>
-                  </div>
-                )}
-              </div>
-            </div>
+          {isCartOpen && (
+            <CartModal 
+              isOpen={isCartOpen}
+              onClose={() => setIsCartOpen(false)}
+              items={cart}
+              onRemove={(id) => setCart(cart.filter(item => item.beatId !== id))}
+              onCheckout={handleCheckout}
+            />
           )}
         </>
       )}
 
-      {/* Styles */}
+      {/* Global Styles */}
       <style>{`
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
         .animate-shake { animation: shake 0.15s ease-in-out 0s 2; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
       `}</style>
     </div>
   );
