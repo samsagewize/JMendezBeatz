@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { 
   ShoppingBag, Search, Music2, LayoutDashboard, 
   X, Music, Waves, TrendingUp, Mail, Server, UploadCloud, Users, Filter, Globe,
-  Lock, AlertCircle, Link as LinkIcon
+  Lock, AlertCircle, Link as LinkIcon, User
 } from 'lucide-react';
 import AdminPortal from './components/AdminPortal';
 import BeatCard from './components/BeatCard';
@@ -13,6 +13,7 @@ import AudioPlayer from './components/AudioPlayer';
 import CheckoutSuccess from './components/CheckoutSuccess';
 import SubmissionPortal from './components/SubmissionPortal';
 import BeatstarsStore from './components/BeatstarsStore';
+import AboutPage from './components/AboutPage';
 import { Beat, CartItem, SiteConfig } from './types';
 
 const SECRET_PASSWORD = 'BeatzbyMe';
@@ -22,7 +23,7 @@ const COMMUNITY_STORAGE_KEY = 'jmendez_community_beats';
 const App = () => {
   const [siteConfig, setSiteConfig] = useState<SiteConfig & { useExternalStore?: boolean, externalStoreUrl?: string }>({
     producerName: "Jmendez Beatz",
-    heroTitle: "World's Best Beats.",
+    heroTitle: "Precision Production. Pure Vibe.",
     heroSubtitle: "High-end production architecture. Explore, listen, and license industry-ready tracks instantly.",
     accentColor: "#a855f7",
     contactEmail: "jmendezbeatz1@gmail.com",
@@ -55,6 +56,7 @@ const App = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutSuccess, setIsCheckoutSuccess] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
@@ -164,6 +166,16 @@ const App = () => {
 
   const hasUnsyncedBeats = localBeats.length > 0 || communityBeats.length > 0;
 
+  if (isAboutOpen) {
+    return (
+      <AboutPage 
+        onBack={() => setIsAboutOpen(false)} 
+        producerName={siteConfig.producerName} 
+        contactEmail={siteConfig.contactEmail} 
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-purple-500/50 flex flex-col font-['Inter']">
       {isCheckoutSuccess ? (
@@ -188,8 +200,8 @@ const App = () => {
                   <AlertCircle size={12} /> Sync Staged Content
                 </div>
               )}
-              <button onClick={() => setIsSubmissionOpen(true)} className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                <UploadCloud size={14} className="text-purple-400" /> Collaboration
+              <button onClick={() => setIsAboutOpen(true)} className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-white text-black border border-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-zinc-200 shadow-xl">
+                <User size={14} /> About Jmendez
               </button>
               <button onClick={() => setIsAuthModalOpen(true)} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all text-zinc-500 hover:text-white">
                 <LayoutDashboard size={20} />
@@ -295,7 +307,6 @@ const App = () => {
             </div>
           </footer>
 
-          {/* Only show site audio player if not using external store (which has its own player) */}
           {!siteConfig.useExternalStore && (
             <AudioPlayer 
               currentBeat={currentBeat} 
