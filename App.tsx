@@ -210,7 +210,41 @@ const App: React.FC = () => {
                   {siteConfig.heroSubtitle}
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col gap-6">
+                  <div className="pm-panel rounded-3xl border border-white/10 bg-white/5 p-5">
+                    <div className="text-[10px] font-black tracking-[0.35em] uppercase text-gray-400">Buy Beats</div>
+                    <div className="mt-2 text-2xl font-black tracking-tight">BeatStars Store</div>
+                    <div className="mt-2 text-sm text-gray-400">Browse, license, and purchase beats directly from BeatStars.</div>
+
+                    <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                      <iframe
+                        title="JMendezBeatz BeatStars"
+                        src="https://www.beatstars.com/jmendezbeatz"
+                        className="h-[560px] w-full"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <a
+                        href="https://www.beatstars.com/jmendezbeatz"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-8 py-4 bg-white text-black rounded-2xl font-bold hover:bg-gray-200 transition-all inline-flex items-center justify-center gap-2"
+                      >
+                        Open in new tab
+                      </a>
+                      <a
+                        href={`mailto:${CONTACT_EMAIL}`}
+                        className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-bold hover:bg-white/10 transition-all inline-flex items-center justify-center gap-2"
+                      >
+                        <Mail size={20} />
+                        Contact
+                      </a>
+                    </div>
+                  </div>
+
                   <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
                     <input 
@@ -221,10 +255,6 @@ const App: React.FC = () => {
                       className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-600/50 transition-all"
                     />
                   </div>
-                  <a href={`mailto:${CONTACT_EMAIL}`} className="px-8 py-4 bg-white text-black rounded-2xl font-bold hover:bg-gray-200 transition-all flex items-center justify-center gap-2">
-                    <Mail size={20} />
-                    Contact Jmendez
-                  </a>
                 </div>
               </div>
             </div>
