@@ -49,13 +49,21 @@ const App: React.FC = () => {
                 Browse, license, and purchase beats directly from BeatStars.
               </p>
 
-              <div className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-black/40">
+              <div className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-black/40 relative">
+                <div className="absolute inset-0 grid place-items-center pointer-events-none">
+                  <div className="text-center px-6">
+                    <div className="text-sm font-black uppercase tracking-widest text-gray-300">Loading BeatStars…</div>
+                    <div className="mt-2 text-xs text-gray-500">If the embed is blocked, use “Open in new tab”.</div>
+                  </div>
+                </div>
                 <iframe
                   title="JMendezBeatz BeatStars"
                   src={BEATSTARS_URL}
-                  className="h-[760px] w-full"
+                  className="w-full"
+                  style={{ height: 760 }}
                   loading="lazy"
                   referrerPolicy="no-referrer"
+                  sandbox="allow-forms allow-popups allow-same-origin allow-scripts"
                 />
               </div>
 
