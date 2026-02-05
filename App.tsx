@@ -49,7 +49,24 @@ const App: React.FC = () => {
                 Browse, license, and purchase beats directly from BeatStars.
               </p>
 
-              <div className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-black/40 relative">
+              <div className="mt-6 flex flex-wrap gap-3">
+                <a
+                  href="#beats"
+                  className="px-8 py-4 bg-white text-black rounded-2xl font-bold hover:bg-gray-200 transition-all inline-flex items-center justify-center"
+                >
+                  Beats
+                </a>
+                <a
+                  href={BEATSTARS_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-bold hover:bg-white/10 transition-all inline-flex items-center justify-center"
+                >
+                  Open BeatStars
+                </a>
+              </div>
+
+              <div id="beats" className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-black/40 relative scroll-mt-32">
                 <div className="absolute inset-0 grid place-items-center pointer-events-none">
                   <div className="text-center px-6">
                     <div className="text-sm font-black uppercase tracking-widest text-gray-300">Loading BeatStars…</div>
