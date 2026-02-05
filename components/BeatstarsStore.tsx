@@ -12,7 +12,7 @@ const BeatstarsStore: React.FC<BeatstarsStoreProps> = ({ url }) => {
 
   return (
     <div className="w-full animate-in fade-in zoom-in-95 duration-700">
-      <div className="relative w-full aspect-[9/16] md:aspect-[16/10] lg:aspect-[21/9] min-h-[700px] glass rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+      <div className="relative w-full aspect-[9/16] md:aspect-[4/3] lg:aspect-video min-h-[1000px] glass rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
         <iframe
           src={embedUrl}
           className="w-full h-full border-none"
@@ -21,24 +21,24 @@ const BeatstarsStore: React.FC<BeatstarsStoreProps> = ({ url }) => {
         />
         
         {/* Verification Footer */}
-        <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between pointer-events-none">
-          <div className="bg-black/80 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
-            <ShieldCheck size={14} className="text-purple-400" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Verified Secure Checkout</span>
+        <div className="absolute bottom-8 left-8 right-8 flex items-center justify-between pointer-events-none">
+          <div className="bg-black/90 backdrop-blur-2xl px-6 py-3 rounded-full border border-white/10 flex items-center gap-3 shadow-2xl">
+            <ShieldCheck size={16} className="text-purple-400" />
+            <span className="text-[11px] font-black uppercase tracking-widest text-zinc-300">Official Secure Marketplace</span>
           </div>
           <a 
             href={url} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="pointer-events-auto bg-white text-black px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-xl"
+            className="pointer-events-auto bg-white text-black px-6 py-3 rounded-full flex items-center gap-3 text-[11px] font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-2xl active:scale-95"
           >
-            Open in Beatstars <ExternalLink size={12} />
+            Expand on Beatstars <ExternalLink size={14} />
           </a>
         </div>
       </div>
       
-      <div className="mt-8 text-center opacity-30">
-        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500">Powered by Beatstars Global Distribution</p>
+      <div className="mt-12 text-center opacity-40">
+        <p className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-500">Encrypted Sonic Distribution via Beatstars API</p>
       </div>
     </div>
   );
